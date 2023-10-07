@@ -8,7 +8,25 @@ import (
 )
 
 func (app *application) createMHelmetHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "create a new motorcycle helmet")
+	var input struct {
+		Name          string  `json:"name"`
+		Year          int32   `json:"year"`
+		Material      string  `json:"material"`
+		Ventilation   bool    `json:"ventilation"`
+		Protection    string  `json:"protection"`
+		Design        string  `json:"design"`
+		Weight        float64 `json:"weight"`
+		SunProtection bool    `json:"sun_protection"`
+		Lining        string  `json:"lining"`
+		Fastening     string  `json:"fastening"`
+	}
+
+	err := app.readJSON(w, r, &input)
+	if err != nil {
+		app.errorResponse(w, r, http.StatusBadRequest, err.Error())
+		return
+	}
+	fmt.Fprintf(w, "%+v\n", input)
 }
 
 func (app *application) showMHelmetHandler(w http.ResponseWriter, r *http.Request) {
@@ -33,7 +51,7 @@ func (app *application) showMHelmetHandler(w http.ResponseWriter, r *http.Reques
 		Fastening:     "Double D-ring Chin Strap",
 	}
 
-	err = app.writeJSON(w, http.StatusOK, envelope{"Moto helmet": helmet}, nil)
+	err = app.writeJSON(w, http.StatusOK, envelope{"helmet": helmet}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 	}
