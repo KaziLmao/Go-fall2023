@@ -1,6 +1,7 @@
 package data
 
 import (
+	"GoProject/internal/validator"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -19,6 +20,15 @@ type Helmet struct {
 	SunProtection bool      `json:"sun_protection"` // Whether the helmet has an integrated sun protection visor.
 	Lining        string    `json:"lining"`         // The material of the lining.
 	Fastening     string    `json:"fastening"`      // The helmet's fastening system (e.g., "Quick-release buckle").
+}
+
+func ValidateHelmet(v *validator.Validator, helmet *Helmet) {
+	v.Check(helmet.Name != "", "title", "must be provided")
+	v.Check(len(helmet.Name) <= 500, "title", "must not be more than 500 bytes long")
+	v.Check(helmet.Year != 0, "year", "must be provided")
+	v.Check(helmet.Year >= 1888, "year", "must be greater than 1888")
+	v.Check(helmet.Year <= int32(time.Now().Year()), "year", "must not be in the future")
+	//	Needs to be added some checks
 }
 
 func (h Helmet) MarshalJSON() ([]byte, error) {

@@ -2,6 +2,7 @@ package main
 
 import (
 	"GoProject/internal/data"
+	"GoProject/internal/validator"
 	"fmt"
 	"net/http"
 	"time"
@@ -23,7 +24,27 @@ func (app *application) createMHelmetHandler(w http.ResponseWriter, r *http.Requ
 
 	err := app.readJSON(w, r, &input)
 	if err != nil {
-		app.errorResponse(w, r, http.StatusBadRequest, err.Error())
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	helmet := &data.Helmet{
+		Name:          input.Name,
+		Year:          input.Year,
+		Material:      input.Material,
+		Ventilation:   input.Ventilation,
+		Protection:    input.Protection,
+		Design:        input.Design,
+		Weight:        input.Weight,
+		SunProtection: input.SunProtection,
+		Lining:        input.Lining,
+		Fastening:     input.Fastening,
+	}
+
+	v := validator.New()
+
+	if data.ValidateHelmet(v, helmet); !v.Valid() {
+		app.failedValidationResponse(w, r, v.Errors)
 		return
 	}
 	fmt.Fprintf(w, "%+v\n", input)
