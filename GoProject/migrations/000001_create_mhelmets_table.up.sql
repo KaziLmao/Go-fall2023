@@ -9,5 +9,6 @@ CREATE TABLE IF NOT EXISTS mhelmets (
     weight integer NOT NULL,
     sun_protection boolean NOT NULL,
     lining text NOT NULL,
-    fastening text NOT NULL
+    fastening text NOT NULL,
+    version integer NOT NULL DEFAULT 1
 )
