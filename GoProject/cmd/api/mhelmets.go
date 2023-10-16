@@ -15,7 +15,6 @@ func (app *application) createMHelmetHandler(w http.ResponseWriter, r *http.Requ
 		Material      string  `json:"material"`
 		Ventilation   bool    `json:"ventilation"`
 		Protection    string  `json:"protection"`
-		Design        string  `json:"design"`
 		Weight        float64 `json:"weight"`
 		SunProtection bool    `json:"sun_protection"`
 		Lining        string  `json:"lining"`
@@ -34,7 +33,6 @@ func (app *application) createMHelmetHandler(w http.ResponseWriter, r *http.Requ
 		Material:      input.Material,
 		Ventilation:   input.Ventilation,
 		Protection:    input.Protection,
-		Design:        input.Design,
 		Weight:        input.Weight,
 		SunProtection: input.SunProtection,
 		Lining:        input.Lining,
@@ -65,7 +63,6 @@ func (app *application) showMHelmetHandler(w http.ResponseWriter, r *http.Reques
 		Material:      "Carbon Fiber",
 		Ventilation:   true,
 		Protection:    "Snell",
-		Design:        "Aerodynamic Racing Design",
 		Weight:        1.2,
 		SunProtection: false,
 		Lining:        "Moisture-wicking and Antibacterial Fabric",

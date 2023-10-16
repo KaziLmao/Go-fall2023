@@ -1,0 +1,2 @@
+ALTER TABLE mhelmets ADD CONSTRAINT mhelmets_year_check CHECK (year BETWEEN 1953 AND date_part('year', now()));
+ALTER TABLE mhelmets ADD CONSTRAINT mhelmets_weight_check CHECK (weight BETWEEN 0.5 AND 2.5);

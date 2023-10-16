@@ -15,7 +15,6 @@ type Helmet struct {
 	Material      string    `json:"material"`       // Material used in the construction of the helmet.
 	Ventilation   bool      `json:"ventilation"`    // Ventilation system in the helmet.
 	Protection    string    `json:"protection"`     // Safety certification of the helmet (e.g., "DOT", "ECE", "Snell").
-	Design        string    `json:"design"`         // The aesthetic design of the helmet.
 	Weight        float64   `json:"weight"`         // Weight of the helmet in kilograms.
 	SunProtection bool      `json:"sun_protection"` // Whether the helmet has an integrated sun protection visor.
 	Lining        string    `json:"lining"`         // The material of the lining.
@@ -44,7 +43,6 @@ func (h Helmet) MarshalJSON() ([]byte, error) {
 		Material      string  `json:"material"`
 		Ventilation   bool    `json:"ventilation"`
 		Protection    string  `json:"protection"`
-		Design        string  `json:"design"`
 		Weight        float64 `json:"weight"`
 		SunProtection bool    `json:"sun_protection"`
 		Lining        string  `json:"lining"`
@@ -56,7 +54,6 @@ func (h Helmet) MarshalJSON() ([]byte, error) {
 		Material:      h.Material,
 		Ventilation:   h.Ventilation,
 		Protection:    h.Protection,
-		Design:        h.Design,
 		Weight:        h.Weight,
 		SunProtection: h.SunProtection,
 		Lining:        h.Lining,
