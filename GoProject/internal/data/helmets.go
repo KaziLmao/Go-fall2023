@@ -2,7 +2,9 @@ package data
 
 import (
 	"GoProject/internal/validator"
+	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 )
@@ -17,8 +19,6 @@ type Helmet struct {
 	Protection    string    `json:"protection"`     // Safety certification of the helmet (e.g., "DOT", "ECE", "Snell").
 	Weight        float64   `json:"weight"`         // Weight of the helmet in kilograms.
 	SunProtection bool      `json:"sun_protection"` // Whether the helmet has an integrated sun protection visor.
-	Lining        string    `json:"lining"`         // The material of the lining.
-	Fastening     string    `json:"fastening"`      // The helmet's fastening system (e.g., "Quick-release buckle").
 }
 
 func ValidateHelmet(v *validator.Validator, helmet *Helmet) {
@@ -45,8 +45,6 @@ func (h Helmet) MarshalJSON() ([]byte, error) {
 		Protection    string  `json:"protection"`
 		Weight        float64 `json:"weight"`
 		SunProtection bool    `json:"sun_protection"`
-		Lining        string  `json:"lining"`
-		Fastening     string  `json:"fastening"`
 	}{
 		ID:            h.ID,
 		Name:          h.Name,
@@ -56,8 +54,122 @@ func (h Helmet) MarshalJSON() ([]byte, error) {
 		Protection:    h.Protection,
 		Weight:        h.Weight,
 		SunProtection: h.SunProtection,
-		Lining:        h.Lining,
-		Fastening:     h.Fastening,
 	}
 	return json.Marshal(aux)
+}
+
+type HelmetModel struct {
+	DB *sql.DB
+}
+
+func (h HelmetModel) Insert(helmet *Helmet) error {
+
+	query := `
+		INSERT INTO mhelmets (name, year, material, ventilation, protection, weight, sun_protection)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		RETURNING id, created_at`
+
+	args := []interface{}{
+		helmet.Name,
+		helmet.Year,
+		helmet.Material,
+		helmet.Ventilation,
+		helmet.Protection,
+		helmet.Weight,
+		helmet.SunProtection,
+	}
+
+	return h.DB.QueryRow(query, args...).Scan(&helmet.ID, &helmet.CreatedAt)
+}
+
+func (h HelmetModel) Get(id int64) (*Helmet, error) {
+	if id < 1 {
+		return nil, ErrRecordNotFound
+	}
+	query := `
+		SELECT id, created_at, name, year, material, ventilation, protection, weight, sun_protection
+		FROM mhelmets
+		WHERE id = $1`
+
+	var helmet Helmet
+
+	err := h.DB.QueryRow(query, id).Scan(
+		&helmet.ID,
+		&helmet.CreatedAt,
+		&helmet.Name,
+		&helmet.Year,
+		&helmet.Material,
+		&helmet.Ventilation,
+		&helmet.Protection,
+		&helmet.Weight,
+		&helmet.SunProtection,
+	)
+
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, ErrRecordNotFound
+		default:
+			return nil, err
+		}
+	}
+	return &helmet, nil
+}
+
+func (h HelmetModel) Update(helmet *Helmet) error {
+	query := `
+		UPDATE mhelmets
+		SET name = $1, year = $2, material = $3, weight = $4, ventilation = $5
+		WHERE id = $6`
+
+	args := []interface{}{
+		helmet.Name,
+		helmet.Year,
+		helmet.Material,
+		helmet.Weight,
+		helmet.Ventilation,
+		helmet.ID,
+	}
+
+	return h.DB.QueryRow(query, args...).Scan(&helmet.ID)
+}
+
+func (h HelmetModel) Delete(id int64) error {
+	if id < 1 {
+		return ErrRecordNotFound
+	}
+
+	query := `
+		DELETE FROM mhelmets
+		WHERE id = $1`
+
+	result, err := h.DB.Exec(query, id)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return ErrRecordNotFound
+	}
+	return nil
+}
+
+type MockHelmetModel struct{}
+
+func (h MockHelmetModel) Insert(helmet *Helmet) error {
+	return nil
+}
+func (h MockHelmetModel) Get(id int64) (*Helmet, error) {
+	return nil, nil
+}
+func (h MockHelmetModel) Update(helmet *Helmet) error {
+	return nil
+}
+func (h MockHelmetModel) Delete(id int64) error {
+	return nil
 }

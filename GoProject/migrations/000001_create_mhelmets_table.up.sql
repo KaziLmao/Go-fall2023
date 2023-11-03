@@ -6,9 +6,6 @@ CREATE TABLE IF NOT EXISTS mhelmets (
     material text NOT NULL,
     ventilation boolean NOT NULL,
     protection text NOT NULL,
-    weight integer NOT NULL,
-    sun_protection boolean NOT NULL,
-    lining text NOT NULL,
-    fastening text NOT NULL,
-    version integer NOT NULL DEFAULT 1
+    weight float NOT NULL,
+    sun_protection boolean NOT NULL
 )
