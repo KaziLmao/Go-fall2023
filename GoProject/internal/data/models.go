@@ -16,17 +16,12 @@ type Models struct {
 		Get(id int64) (*Helmet, error)
 		Update(movie *Helmet) error
 		Delete(id int64) error
+		GetAll(name string, material string, protection string, filters Filters) ([]*Helmet, Metadata, error)
 	}
 }
 
 func NewModels(db *sql.DB) Models {
 	return Models{
 		Helmets: HelmetModel{DB: db},
-	}
-}
-
-func NewMockModels() Models {
-	return Models{
-		Helmets: MockHelmetModel{},
 	}
 }

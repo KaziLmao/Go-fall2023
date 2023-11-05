@@ -86,6 +86,59 @@ func (h HelmetModel) Insert(helmet *Helmet) error {
 	return h.DB.QueryRowContext(ctx, query, args...).Scan(&helmet.ID, &helmet.CreatedAt)
 }
 
+func (m HelmetModel) GetAll(name string, material string, protection string, filters Filters) ([]*Helmet, Metadata, error) {
+	query := fmt.Sprintf(`
+		SELECT id, created_at, name, year, material, ventilation, protection, weight, sun_protection
+		FROM mhelmets
+		WHERE (STRPOS(LOWER(name), LOWER($1)) > 0 OR $1 = '')
+		AND (STRPOS(LOWER(material), LOWER($2)) > 0 OR $2 = '')
+		AND (STRPOS(LOWER(protection), LOWER($3)) > 0 OR $3 = '')
+		ORDER BY %s %s, id ASC
+		LIMIT $4 OFFSET $5`, filters.sortColumn(), filters.sortDirection())
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	rows, err := m.DB.QueryContext(ctx, query, name, material, filters.limit(), filters.offset())
+	if err != nil {
+		return nil, Metadata{}, err
+	}
+
+	defer rows.Close()
+
+	totalRecords := 0
+	helmets := []*Helmet{}
+
+	for rows.Next() {
+		var helmet Helmet
+		err := rows.Scan(
+			&totalRecords,
+			&helmet.ID,
+			&helmet.CreatedAt,
+			&helmet.Name,
+			&helmet.Year,
+			&helmet.Material,
+			&helmet.Ventilation,
+			&helmet.Protection,
+			&helmet.Weight,
+			&helmet.SunProtection,
+		)
+		if err != nil {
+			return nil, Metadata{}, err
+		}
+
+		helmets = append(helmets, &helmet)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, Metadata{}, err
+	}
+
+	metadata := calculateMetadata(totalRecords, filters.Page, filters.PageSize)
+
+	return helmets, metadata, nil
+}
+
 func (h HelmetModel) Get(id int64) (*Helmet, error) {
 	if id < 1 {
 		return nil, ErrRecordNotFound
@@ -186,17 +239,22 @@ func (h HelmetModel) Delete(id int64) error {
 	return nil
 }
 
-type MockHelmetModel struct{}
-
-func (h MockHelmetModel) Insert(helmet *Helmet) error {
-	return nil
-}
-func (h MockHelmetModel) Get(id int64) (*Helmet, error) {
-	return nil, nil
-}
-func (h MockHelmetModel) Update(helmet *Helmet) error {
-	return nil
-}
-func (h MockHelmetModel) Delete(id int64) error {
-	return nil
-}
+//type MockHelmetModel struct{}
+//
+//func (h MockHelmetModel) Insert(helmet *Helmet) error {
+//	return nil
+//}
+//
+//func (h MockHelmetModel) GetAll(id int64) (*Helmet, error) {
+//	return nil, nil
+//}
+//
+//func (h MockHelmetModel) Get(id int64) (*Helmet, error) {
+//	return nil, nil
+//}
+//func (h MockHelmetModel) Update(helmet *Helmet) error {
+//	return nil
+//}
+//func (h MockHelmetModel) Delete(id int64) error {
+//	return nil
+//}
