@@ -5,10 +5,12 @@ import (
 	"net/http"
 )
 
-func (app *application) routes() *httprouter.Router {
+func (app *application) routes() http.Handler {
 	router := httprouter.New()
+
 	router.NotFound = http.HandlerFunc(app.notFoundResponse)
 	router.MethodNotAllowed = http.HandlerFunc(app.methodNotAllowedResponse)
+
 	router.HandlerFunc(http.MethodGet, "/v1/healthcheck", app.healthcheckHandler)
 
 	router.HandlerFunc(http.MethodGet, "/v1/mhelmets", app.listMHelmetsHandler)
@@ -16,5 +18,5 @@ func (app *application) routes() *httprouter.Router {
 	router.HandlerFunc(http.MethodGet, "/v1/mhelmets/:id", app.showMHelmetHandler)
 	router.HandlerFunc(http.MethodPatch, "/v1/mhelmets/:id", app.updateMHelmetHandler)
 	router.HandlerFunc(http.MethodDelete, "/v1/mhelmets/:id", app.deleteMHelmetHandler)
-	return router
+	return app.recoverPanic(router)
 }
