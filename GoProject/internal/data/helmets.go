@@ -2,6 +2,7 @@ package data
 
 import (
 	"GoProject/internal/validator"
+	"context"
 	"database/sql"
 	"encoding/json"
 	"errors"
@@ -79,7 +80,10 @@ func (h HelmetModel) Insert(helmet *Helmet) error {
 		helmet.SunProtection,
 	}
 
-	return h.DB.QueryRow(query, args...).Scan(&helmet.ID, &helmet.CreatedAt)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	return h.DB.QueryRowContext(ctx, query, args...).Scan(&helmet.ID, &helmet.CreatedAt)
 }
 
 func (h HelmetModel) Get(id int64) (*Helmet, error) {
@@ -93,7 +97,11 @@ func (h HelmetModel) Get(id int64) (*Helmet, error) {
 
 	var helmet Helmet
 
-	err := h.DB.QueryRow(query, id).Scan(
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+
+	defer cancel()
+
+	err := h.DB.QueryRowContext(ctx, query, id).Scan(
 		&helmet.ID,
 		&helmet.CreatedAt,
 		&helmet.Name,
@@ -119,19 +127,35 @@ func (h HelmetModel) Get(id int64) (*Helmet, error) {
 func (h HelmetModel) Update(helmet *Helmet) error {
 	query := `
 		UPDATE mhelmets
-		SET name = $1, year = $2, material = $3, weight = $4, ventilation = $5
-		WHERE id = $6`
+		SET name = $1, year = $2, material = $3, ventilation = $4, protection = $5, weight = $6, sun_protection = $7
+		WHERE id = $8
+		RETURNING id`
 
 	args := []interface{}{
 		helmet.Name,
 		helmet.Year,
 		helmet.Material,
-		helmet.Weight,
 		helmet.Ventilation,
+		helmet.Protection,
+		helmet.Weight,
+		helmet.SunProtection,
 		helmet.ID,
 	}
 
-	return h.DB.QueryRow(query, args...).Scan(&helmet.ID)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	err := h.DB.QueryRowContext(ctx, query, args...).Scan(&helmet.ID)
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return ErrEditConflict
+		default:
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (h HelmetModel) Delete(id int64) error {
@@ -143,7 +167,10 @@ func (h HelmetModel) Delete(id int64) error {
 		DELETE FROM mhelmets
 		WHERE id = $1`
 
-	result, err := h.DB.Exec(query, id)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	result, err := h.DB.ExecContext(ctx, query, id)
 	if err != nil {
 		return err
 	}

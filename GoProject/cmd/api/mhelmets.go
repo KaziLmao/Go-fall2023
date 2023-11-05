@@ -27,7 +27,7 @@ func (app *application) createMHelmetHandler(w http.ResponseWriter, r *http.Requ
 
 	helmet := &data.Helmet{
 		Name:          input.Name,
-		Year:          input.Year,
+		Year:          int32(input.Year),
 		Material:      input.Material,
 		Ventilation:   input.Ventilation,
 		Protection:    input.Protection,
@@ -100,13 +100,13 @@ func (app *application) updateMHelmetHandler(w http.ResponseWriter, r *http.Requ
 	}
 
 	var input struct {
-		Name          string  `json:"name"`
-		Year          int32   `json:"year"`
-		Material      string  `json:"material"`
-		Ventilation   bool    `json:"ventilation"`
-		Protection    string  `json:"protection"`
-		Weight        float64 `json:"weight"`
-		SunProtection bool    `json:"sun_protection"`
+		Name          *string  `json:"name"`
+		Year          *int32   `json:"year"`
+		Material      *string  `json:"material"`
+		Ventilation   *bool    `json:"ventilation"`
+		Protection    *string  `json:"protection"`
+		Weight        *float64 `json:"weight"`
+		SunProtection *bool    `json:"sun_protection"`
 	}
 
 	err = app.readJSON(w, r, &input)
@@ -115,13 +115,27 @@ func (app *application) updateMHelmetHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	helmet.Name = input.Name
-	helmet.Year = input.Year
-	helmet.Material = input.Material
-	helmet.Ventilation = input.Ventilation
-	helmet.Protection = input.Protection
-	helmet.Weight = input.Weight
-	helmet.SunProtection = input.SunProtection
+	if input.Name != nil {
+		helmet.Name = *input.Name
+	}
+	if input.Year != nil {
+		helmet.Year = *input.Year
+	}
+	if input.Material != nil {
+		helmet.Material = *input.Material
+	}
+	if input.Ventilation != nil {
+		helmet.Ventilation = *input.Ventilation
+	}
+	if input.Protection != nil {
+		helmet.Protection = *input.Protection
+	}
+	if input.Weight != nil {
+		helmet.Weight = *input.Weight
+	}
+	if input.SunProtection != nil {
+		helmet.SunProtection = *input.SunProtection
+	}
 
 	v := validator.New()
 	if data.ValidateHelmet(v, helmet); !v.Valid() {
@@ -131,7 +145,12 @@ func (app *application) updateMHelmetHandler(w http.ResponseWriter, r *http.Requ
 
 	err = app.models.Helmets.Update(helmet)
 	if err != nil {
-		app.serverErrorResponse(w, r, err)
+		switch {
+		case errors.Is(err, data.ErrEditConflict):
+			app.editConflictResponse(w, r)
+		default:
+			app.serverErrorResponse(w, r, err)
+		}
 		return
 	}
 
