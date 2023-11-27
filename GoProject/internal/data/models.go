@@ -18,10 +18,12 @@ type Models struct {
 		Delete(id int64) error
 		GetAll(name string, material string, protection string, filters Filters) ([]*Helmet, Metadata, error)
 	}
+	Users UserModel
 }
 
 func NewModels(db *sql.DB) Models {
 	return Models{
 		Helmets: HelmetModel{DB: db},
+		Users:   UserModel{DB: db},
 	}
 }
