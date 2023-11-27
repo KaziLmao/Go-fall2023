@@ -11,19 +11,15 @@ var (
 )
 
 type Models struct {
-	Helmets interface {
-		Insert(helmet *Helmet) error
-		Get(id int64) (*Helmet, error)
-		Update(movie *Helmet) error
-		Delete(id int64) error
-		GetAll(name string, material string, protection string, filters Filters) ([]*Helmet, Metadata, error)
-	}
-	Users UserModel
+	Helmets HelmetModel
+	Tokens  TokenModel
+	Users   UserModel
 }
 
 func NewModels(db *sql.DB) Models {
 	return Models{
 		Helmets: HelmetModel{DB: db},
+		Tokens:  TokenModel{DB: db},
 		Users:   UserModel{DB: db},
 	}
 }
