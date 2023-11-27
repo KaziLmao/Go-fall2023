@@ -56,7 +56,6 @@ func (l *Logger) PrintFatal(err error, properties map[string]string) {
 }
 
 func (l *Logger) print(level Level, message string, properties map[string]string) (int, error) {
-
 	if level < l.minLevel {
 		return 0, nil
 	}
